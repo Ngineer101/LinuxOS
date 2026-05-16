@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import $ from 'jquery';
-import ReactGA from 'react-ga4';
 import emailjs from '@emailjs/browser';
+
+const emailJsUserId = import.meta.env.VITE_EMAILJS_USER_ID;
+const emailJsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const emailJsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 
 export class Gedit extends Component {
 
@@ -13,7 +16,7 @@ export class Gedit extends Component {
     }
 
     componentDidMount() {
-        emailjs.init(process.env.NEXT_PUBLIC_USER_ID);
+        if (emailJsUserId) emailjs.init(emailJsUserId);
     }
 
     sendMessage = async () => {
@@ -42,8 +45,13 @@ export class Gedit extends Component {
 
         this.setState({ sending: true });
 
-        const serviceID = process.env.NEXT_PUBLIC_SERVICE_ID;
-        const templateID = process.env.NEXT_PUBLIC_TEMPLATE_ID;
+        const serviceID = emailJsServiceId;
+        const templateID = emailJsTemplateId;
+        if (!emailJsUserId || !serviceID || !templateID) {
+            this.setState({ sending: false });
+            $("#close-gedit").trigger("click");
+            return;
+        }
         const templateParams = {
             'name': name,
             'subject': subject,
@@ -57,12 +65,6 @@ export class Gedit extends Component {
             this.setState({ sending: false });
             $("#close-gedit").trigger("click");
         })
-
-        ReactGA.event({
-            category: "Send Message",
-            action: `${name}, ${subject}, ${message}`
-        });
-
     }
 
     render() {
